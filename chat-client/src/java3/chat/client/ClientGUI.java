@@ -229,10 +229,6 @@ public class ClientGUI extends JFrame implements ActionListener, Thread.Uncaught
             case Library.AUTH_ACCEPT:
                 setTitle(WINDOW_TITLE + " entered with nickname: " + arr[1]);
                 break;
-            case Library.AUTH_RENAME:
-                //setTitle(String.format("%s user with nickname:%s change nickname on: %s", WINDOW_TITLE, arr[1], arr[2]));
-                setTitle(String.format("%s user with nickname: change nickname on: %s", WINDOW_TITLE, arr[1]));
-                break;
             case Library.AUTH_DENIED:
                 putLog(msg);
                 break;
