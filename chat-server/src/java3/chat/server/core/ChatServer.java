@@ -1,6 +1,8 @@
 package java3.chat.server.core;
 
 import java3.chat.common.Library;
+import java3.chat.common.ParseSpam;
+import java3.chat.common.ReaderFileSpamThread;
 import java3.network.ServerSocketThread;
 import java3.network.ServerSocketThreadListener;
 import java3.network.SocketThread;
@@ -11,6 +13,7 @@ import java.net.Socket;
 import java.text.DateFormat;
 import java.text.SimpleDateFormat;
 import java.util.Vector;
+import java.util.concurrent.CopyOnWriteArrayList;
 
 public class ChatServer implements ServerSocketThreadListener, SocketThreadListener {
 
@@ -18,6 +21,10 @@ public class ChatServer implements ServerSocketThreadListener, SocketThreadListe
     private ServerSocketThread server;
     private final DateFormat DATE_FORMAT = new SimpleDateFormat("HH:mm:ss: ");
     private Vector<SocketThread> clients = new Vector<>();
+
+    private CopyOnWriteArrayList<String> listSpam = new CopyOnWriteArrayList<>();
+    private ReaderFileSpamThread reader = new ReaderFileSpamThread(listSpam);
+    //WriterFileSpamThread writer = new WriterFileSpamThread(listSpam);
 
     public ChatServer(ChatServerListener listener) {
         this.listener = listener;
@@ -167,7 +174,8 @@ public class ChatServer implements ServerSocketThreadListener, SocketThreadListe
                 sendToAuthClients(Library.getUserList(getUsers()));
                 break;
             case Library.TYPE_BCAST_CLIENT:
-                sendToAuthClients(Library.getTypeBroadcast(client.getNickname(), arr[1]));
+                sendToAuthClients(Library.getTypeBroadcast(client.getNickname(),
+                                  new ParseSpam(listSpam).changeSpamWord(arr[1])));
                 break;
             default:
                 client.sendMessage(Library.getMsgFormatError(msg));

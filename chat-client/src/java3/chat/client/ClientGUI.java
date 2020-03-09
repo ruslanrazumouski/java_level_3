@@ -11,9 +11,15 @@ import java.awt.event.ActionListener;
 import java.io.FileWriter;
 import java.io.IOException;
 import java.net.Socket;
+import java.nio.charset.StandardCharsets;
+import java.nio.file.Files;
+import java.nio.file.NoSuchFileException;
+import java.nio.file.Paths;
 import java.text.DateFormat;
 import java.text.SimpleDateFormat;
-import java.util.Arrays;
+import java.util.*;
+import java.util.List;
+import java.util.stream.Collectors;
 
 import static javax.swing.JOptionPane.showInputDialog;
 
@@ -46,6 +52,8 @@ public class ClientGUI extends JFrame implements ActionListener, Thread.Uncaught
     private SocketThread socketThread;
     private final DateFormat DATE_FORMAT = new SimpleDateFormat("HH:mm:ss: ");
     private final String WINDOW_TITLE = "Chat";
+    private final String LOG_FILE = "log.txt";
+    private final int COUNT_LINES_FROM_LOG = 100;
 
     public static void main(String[] args) {
         SwingUtilities.invokeLater(new Runnable() {
@@ -98,16 +106,17 @@ public class ClientGUI extends JFrame implements ActionListener, Thread.Uncaught
 
         panelBottom.setVisible(false);
         setVisible(true);
+
+        readFromLogFile(COUNT_LINES_FROM_LOG);
     }
 
     private void sendMessage() {
         String msg = tfMessage.getText();
-        //String userName = tfLogin.getText();
+        String userName = tfLogin.getText();
         if ( "".equals(msg)) return;
         tfMessage.setText(null);
         tfMessage.requestFocusInWindow();
         socketThread.sendMessage(Library.getTypeBcastClient(msg));
-        //wrtMsgToLogFile(msg, userName);
     }
 
     private void connect() {
@@ -128,13 +137,36 @@ public class ClientGUI extends JFrame implements ActionListener, Thread.Uncaught
         socketThread.sendMessage(Library.getAuthRename(nickname, userName, password));
     }
 
-    private void wrtMsgToLogFile(String msg, String userName) {
-        try ( FileWriter out = new FileWriter("log.txt", true) ) {
+    private void writeLogToFile(String userName, String msg) {
+        try ( FileWriter out = new FileWriter(LOG_FILE, true) ) {
             out.write(userName + ": " + msg + "\n");
             out.flush();
         }
         catch (IOException e) {
             if(!shownIoErrors) {
+                shownIoErrors = true;
+                showException(Thread.currentThread(), e);
+            }
+        }
+    }
+
+    private void readFromLogFile(int countLines) {
+        try {
+            List<String> lines = Files.readAllLines(Paths.get(LOG_FILE), StandardCharsets.UTF_8);
+            int i = countLines < lines.size() ? lines.size()-countLines : 0;
+            while (i < lines.size()) {
+                putLog(lines.get(i));
+                i++;
+            }
+        }
+        catch (NoSuchFileException e) {
+            if (!shownIoErrors) {
+                shownIoErrors = true;
+                showException(Thread.currentThread(), e);
+            }
+        }
+        catch (IOException e) {
+            if (!shownIoErrors) {
                 shownIoErrors = true;
                 showException(Thread.currentThread(), e);
             }
@@ -237,8 +269,8 @@ public class ClientGUI extends JFrame implements ActionListener, Thread.Uncaught
                 socketThread.close();
                 break;
             case Library.TYPE_BROADCAST:
-                putLog(DATE_FORMAT.format(Long.parseLong(arr[1])) +
-                arr[2] + ": " + arr[3]);
+                putLog(DATE_FORMAT.format(Long.parseLong(arr[1])) + arr[2] + ": " + arr[3]);
+                writeLogToFile(arr[2], arr[3]);
                 break;
             case Library.USER_LIST:
                 String users = msg.substring(Library.USER_LIST.length() +

@@ -18,6 +18,7 @@ public class ServerGUI extends JFrame implements ActionListener, UncaughtExcepti
     private static final int HEIGHT = 300;
 
     private final ChatServer chatServer = new ChatServer(this);
+
     private final JButton btnStart = new JButton("Start");
     private final JButton btnStop = new JButton("Stop");
     private final JPanel panelTop = new JPanel(new GridLayout(1,2));
@@ -49,7 +50,6 @@ public class ServerGUI extends JFrame implements ActionListener, UncaughtExcepti
         panelTop.add(btnStop);
         add(panelTop, BorderLayout.NORTH);
         add(scrollPane, BorderLayout.CENTER);
-
 
         setVisible(true);
     }
