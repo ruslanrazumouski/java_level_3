@@ -1,0 +1,10 @@
+Server: main connected
+main: hi to all
+main: how do you do?
+Server: Client: main changed nickname to: admin
+admin: hi, changed my name
+Server: admin connected
+Server: admin connected
+admin: hi carrot man
+Server: admin connected
+admin: carrot all
