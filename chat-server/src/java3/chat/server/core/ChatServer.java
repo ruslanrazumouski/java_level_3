@@ -13,7 +13,7 @@ import java.net.Socket;
 import java.text.DateFormat;
 import java.text.SimpleDateFormat;
 import java.util.Vector;
-import java.util.concurrent.CopyOnWriteArrayList;
+import java.util.concurrent.*;
 
 public class ChatServer implements ServerSocketThreadListener, SocketThreadListener {
 
@@ -25,6 +25,10 @@ public class ChatServer implements ServerSocketThreadListener, SocketThreadListe
     private CopyOnWriteArrayList<String> listSpam = new CopyOnWriteArrayList<>();
     private ReaderFileSpamThread reader = new ReaderFileSpamThread(listSpam);
     //WriterFileSpamThread writer = new WriterFileSpamThread(listSpam);
+
+    private final int MAX_POOL_SIZE = 100;
+    final BlockingQueue<Runnable> queue = new ArrayBlockingQueue<>(MAX_POOL_SIZE);
+    ExecutorService executorService = new ThreadPoolExecutor(MAX_POOL_SIZE, MAX_POOL_SIZE, 0L, TimeUnit.MILLISECONDS, queue);
 
     public ChatServer(ChatServerListener listener) {
         this.listener = listener;
@@ -69,6 +73,7 @@ public class ChatServer implements ServerSocketThreadListener, SocketThreadListe
         for (int i = 0; i < clients.size(); i++) {
             clients.get(i).close();
         }
+        executorService.shutdown();
     }
 
     @Override
@@ -85,7 +90,8 @@ public class ChatServer implements ServerSocketThreadListener, SocketThreadListe
     public void onSocketAccepted(ServerSocketThread thread, ServerSocket server, Socket socket) {
         putLog("Client connected");
         String name = "SocketThread " + socket.getInetAddress() + ":" + socket.getPort();
-        new ClientThread(this, name, socket);
+        //new ClientThread(this, name, socket);
+        executorService.execute( new ClientThread(this, name, socket) );
     }
 
     @Override

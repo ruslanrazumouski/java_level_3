@@ -19,7 +19,6 @@ import java.text.DateFormat;
 import java.text.SimpleDateFormat;
 import java.util.*;
 import java.util.List;
-import java.util.stream.Collectors;
 
 import static javax.swing.JOptionPane.showInputDialog;
 
@@ -42,6 +41,7 @@ public class ClientGUI extends JFrame implements ActionListener, Thread.Uncaught
     private final JTextField tfMessage = new JTextField();
     private final JButton btnSend = new JButton("Send");
     private final JList<String> userList = new JList<>();
+
 
     JMenuBar menuBar = new JMenuBar();
     JMenu userMenu = new JMenu("User");
@@ -123,6 +123,7 @@ public class ClientGUI extends JFrame implements ActionListener, Thread.Uncaught
         try {
             Socket socket = new Socket(tfIPAddress.getText(), Integer.parseInt(tfPort.getText()) );
             socketThread = new SocketThread(this, "Client", socket);
+            socketThread.start();
         } catch (IOException e) {
             showException(Thread.currentThread(), e);
         }
